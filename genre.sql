@@ -1,22 +1,47 @@
-CREATE TABLE genre_temp AS
-WITH split(pokedex_number, abilities , nextAbility) AS (
-    SELECT pokedex_number, '' AS abilities, abilities|| ',' AS nextAbility
-    FROM pokemon_import
+-- Use recursion to createa table --
+CREATE TABLE genre_id AS
+WITH split(id, genre , nextgenre) AS (
+    SELECT id, '' AS genre, genre|| ',' AS nextgenre
+    FROM imdb_movies_with_id
     UNION ALL
-        SELECT pokedex_number,
-        substr(nextAbility, 0, instr(nextAbility, ',')) AS abilities,
-        substr(nextAbility, instr(nextAbility, ',')+1) AS nextAbility
+        SELECT id,
+        substr(nextgenre, 0, instr(nextgenre, ',')) AS genre,
+        substr(nextgenre, instr(nextgenre, ',')+1) AS nextgenre
     FROM split
-    WHERE nextAbility !=''
+    WHERE nextgenre !=''
 )
-SELECT pokedex_number, abilities
+SELECT id, genre
 FROM split
-WHERE abilities != ''
-ORDER BY pokedex_number;
+WHERE genre != ''
+ORDER BY id;
 
--- rename abilities and pokedex_number --
-ALTER TABLE genre_temp
-RENAME COLUMN abilities TO moves;
+-- rename genre and id --
+ALTER TABLE genre_id
+RENAME COLUMN genre TO genres;
 
-ALTER TABLE genre_temp
-RENAME COLUMN pokedex_number TO dex;
+ALTER TABLE genre_id
+RENAME COLUMN id TO movie_id;
+
+-- create genre table --
+CREATE TABLE genre AS
+SELECT DISTINCT genres
+FROM genre_id;
+
+-- add autoincrementing id to genre table --
+ALTER TABLE genre RENAME to genre_old;
+
+CREATE TABLE genre (
+genre_id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT
+);
+
+INSERT INTO genre (name) SELECT genres FROM genre_old;
+
+DROP TABLE genre_old;
+
+
+-- update genre_id table --
+UPDATE genre_id
+SET genres = genre.genre_id
+FROM genre
+WHERE genre_id.genres = genre.name;
