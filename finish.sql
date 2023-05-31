@@ -5,3 +5,4 @@ ALTER TABLE imdb_movies_with_id DROP COLUMN genre;
 ALTER TABLE imdb_movies_with_id DROP COLUMN crew;
 
 ALTER TABLE imdb_movies_with_id RENAME TO imdb_movies;
+DROP TABLE imdb_movies_import;
